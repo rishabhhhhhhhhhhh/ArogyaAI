@@ -183,9 +183,14 @@ process.on('SIGINT', () => {
   });
 });
 
-// start server
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} - env: ${process.env.NODE_ENV || 'dev'}`);
-  console.log('WebSocket signaling server initialized');
-  console.log('ICE server management and monitoring enabled');
-});
+// start server (only in development, not on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT} - env: ${process.env.NODE_ENV || 'dev'}`);
+    console.log('WebSocket signaling server initialized');
+    console.log('ICE server management and monitoring enabled');
+  });
+}
+
+// Export for Vercel serverless functions
+module.exports = app;
