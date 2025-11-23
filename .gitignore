@@ -1,0 +1,385 @@
+# ArogyaAI Telemedicine Platform - Git Ignore File
+
+# ===================================
+# Dependencies & Node Modules
+# ===================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===================================
+# Environment Variables & Secrets
+# ===================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Backend environment files
+Backend/.env
+Backend/.env.local
+Backend/.env.development
+Backend/.env.production
+Backend/.env.test
+
+# Frontend environment files
+"ArogyaAI Telemedicine Platform"/.env
+"ArogyaAI Telemedicine Platform"/.env.local
+"ArogyaAI Telemedicine Platform"/.env.development
+"ArogyaAI Telemedicine Platform"/.env.production
+
+# ===================================
+# Build Outputs & Distribution
+# ===================================
+dist/
+dist-ssr/
+build/
+out/
+*.local
+
+# Frontend build outputs
+"ArogyaAI Telemedicine Platform"/dist/
+"ArogyaAI Telemedicine Platform"/build/
+
+# ===================================
+# Development & IDE Files
+# ===================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# VS Code settings (keep some, ignore others)
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# ===================================
+# Operating System Files
+# ===================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===================================
+# Logs & Runtime Files
+# ===================================
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+lib-cov/
+coverage/
+.nyc_output/
+.grunt/
+bower_components/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ===================================
+# Database & Storage
+# ===================================
+# MongoDB
+*.mongodb
+*.db
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db3
+
+# Database dumps
+*.sql
+*.dump
+
+# ===================================
+# File Uploads & User Content
+# ===================================
+Backend/uploads/
+uploads/
+temp/
+tmp/
+
+# User uploaded files
+Backend/public/uploads/
+"ArogyaAI Telemedicine Platform"/public/uploads/
+
+# ===================================
+# Cache & Temporary Files
+# ===================================
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist/
+.serverless/
+.fusebox/
+.dynamodb/
+
+# Vite cache
+.vite/
+
+# ESLint cache
+.eslintcache
+
+# Stylelint cache
+.stylelintcache
+
+# ===================================
+# Testing & Coverage
+# ===================================
+coverage/
+.nyc_output/
+junit.xml
+test-results/
+playwright-report/
+test-results.xml
+
+# Jest
+jest_*
+.jest/
+
+# ===================================
+# Package Manager Files
+# ===================================
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# npm
+.npm/
+npm-debug.log*
+
+# pnpm
+.pnpm-debug.log*
+
+# ===================================
+# TypeScript & Compilation
+# ===================================
+*.tsbuildinfo
+.tscache/
+
+# ===================================
+# Linting & Formatting
+# ===================================
+.eslintcache
+.stylelintcache
+.prettierignore
+
+# ===================================
+# Documentation & Generated Files
+# ===================================
+# Auto-generated documentation
+docs/api/
+docs/build/
+
+# Storybook
+storybook-static/
+
+# ===================================
+# Security & Certificates
+# ===================================
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# JWT secrets
+jwt-secret.txt
+private-key.pem
+public-key.pem
+
+# ===================================
+# Deployment & CI/CD
+# ===================================
+# Vercel
+.vercel/
+
+# Netlify
+.netlify/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Kubernetes
+*.kubeconfig
+
+# ===================================
+# Backup & Archive Files
+# ===================================
+*.backup
+*.bak
+*.old
+*.orig
+*.rej
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# ===================================
+# Medical Data & HIPAA Compliance
+# ===================================
+# Patient data (should never be in repo)
+patient-data/
+medical-records/
+phi-data/
+*.phi
+*.medical
+
+# Test data with sensitive info
+test-data/sensitive/
+mock-patient-data/real/
+
+# ===================================
+# AI/ML Models & Training Data
+# ===================================
+# Large model files
+*.model
+*.pkl
+*.h5
+*.pb
+training-data/
+model-weights/
+
+# ===================================
+# Analytics & Monitoring
+# ===================================
+# Analytics data
+analytics/
+metrics/
+*.analytics
+
+# Monitoring configs with secrets
+monitoring/secrets/
+
+# ===================================
+# Project Specific
+# ===================================
+# Custom build scripts output
+scripts/output/
+
+# Temporary markdown files
+*.tmp.md
+TEMP_*.md
+
+# Local configuration overrides
+config.local.js
+config.local.json
+
+# Kiro IDE files
+.kiro/
+
+# ===================================
+# Editor & Tool Specific
+# ===================================
+# Vim
+*.swp
+*.swo
+.vimrc.local
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Atom
+.atom/
+
+# ===================================
+# Miscellaneous
+# ===================================
+# Temporary files
+*.tmp
+*.temp
+
+# Lock files (keep package-lock.json but ignore others)
+# yarn.lock  # Uncomment if using npm instead of yarn
+# package-lock.json  # Uncomment if using yarn instead of npm
+
+# Local development overrides
+.local/
+local/
+
+# Debug files
+debug/
+*.debug
+
+# Performance monitoring
+.clinic/
+clinic.json
+
+# ===================================
+# Keep These Files (Negative Patterns)
+# ===================================
+# Keep important config files
+!.gitkeep
+!.env.example
+!.env.template
+
+# Keep documentation
+!README.md
+!CHANGELOG.md
+!LICENSE
+!CONTRIBUTING.md
+
+# Keep essential config files
+!package.json
+!package-lock.json
+!yarn.lock
+!tsconfig.json
+!vite.config.ts
+!tailwind.config.js

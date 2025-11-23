@@ -1,0 +1,363 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+  --font-family-headings: 'Poppins', system-ui, sans-serif;
+  --font-family-body: 'Inter', system-ui, sans-serif;
+  
+  /* ArogyaAI Dark Theme Colors */
+  --primary-teal: #0E7A7A;
+  --accent-emerald: #00B894;
+  --accent-cyan: #23C4F8;
+  --alert-coral: #FF7A59;
+  --bg-charcoal: #0A0A0B;
+  --bg-charcoal-light: #121212;
+  --text-offwhite: #E8E8E8;
+  --text-muted: #A0A0A0;
+  
+  --background: var(--bg-charcoal);
+  --foreground: var(--text-offwhite);
+  --card: rgba(18, 18, 18, 0.8);
+  --card-foreground: var(--text-offwhite);
+  --popover: rgba(18, 18, 18, 0.95);
+  --popover-foreground: var(--text-offwhite);
+  --primary: var(--primary-teal);
+  --primary-foreground: var(--text-offwhite);
+  --secondary: #1A1A1A;
+  --secondary-foreground: var(--text-offwhite);
+  --muted: #1F1F1F;
+  --muted-foreground: var(--text-muted);
+  --accent: var(--accent-emerald);
+  --accent-foreground: var(--text-offwhite);
+  --destructive: var(--alert-coral);
+  --destructive-foreground: var(--text-offwhite);
+  --border: rgba(14, 122, 122, 0.2);
+  --input: rgba(14, 122, 122, 0.15);
+  --input-background: rgba(18, 18, 18, 0.6);
+  --switch-background: #2A2A2A;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: var(--primary-teal);
+  --chart-1: var(--accent-emerald);
+  --chart-2: var(--accent-cyan);
+  --chart-3: var(--primary-teal);
+  --chart-4: var(--alert-coral);
+  --chart-5: #9B59B6;
+  --radius: 0.75rem;
+  --sidebar: rgba(10, 10, 11, 0.95);
+  --sidebar-foreground: var(--text-offwhite);
+  --sidebar-primary: var(--primary-teal);
+  --sidebar-primary-foreground: var(--text-offwhite);
+  --sidebar-accent: rgba(14, 122, 122, 0.1);
+  --sidebar-accent-foreground: var(--text-offwhite);
+  --sidebar-border: rgba(14, 122, 122, 0.2);
+  --sidebar-ring: var(--primary-teal);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-family-body);
+    background: linear-gradient(to bottom, #0A0A0B, #121212);
+    min-height: 100vh;
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-family-headings);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    h4 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    p {
+      font-size: 1rem;
+      font-weight: var(--font-weight-normal);
+      line-height: 1.6;
+    }
+
+    label {
+      font-size: 0.875rem;
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: 1rem;
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: 1rem;
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+/* Custom Glassmorphism Effects */
+.glass-panel {
+  background: rgba(18, 18, 18, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(14, 122, 122, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Dropdown z-index fix - without affecting layout */
+.dropdown-container-active {
+  z-index: 10000 !important;
+}
+
+/* Ensure dropdown appears above everything */
+.custom-select-dropdown {
+  position: absolute !important;
+  z-index: 999999 !important;
+}
+
+/* Enhanced dropdown visibility */
+.dropdown-menu-enhanced {
+  background: rgba(10, 10, 11, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(14, 122, 122, 0.3) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Glow Effects */
+.glow-teal {
+  box-shadow: 0 0 20px rgba(14, 122, 122, 0.4), 0 0 40px rgba(14, 122, 122, 0.2);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 20px rgba(0, 184, 148, 0.4), 0 0 40px rgba(0, 184, 148, 0.2);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(35, 196, 248, 0.4), 0 0 40px rgba(35, 196, 248, 0.2);
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(14, 122, 122, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(14, 122, 122, 0.6), 0 0 50px rgba(14, 122, 122, 0.3);
+  }
+}
+
+@keyframes rotate-neural {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.rotate-neural {
+  animation: rotate-neural 2s linear infinite;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* AGGRESSIVE OVERRIDE of all Radix Select animations and positioning */
+[data-radix-select-content] {
+  /* Completely disable all default animations and transforms */
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
+  
+  /* Force proper positioning */
+  position: absolute !important;
+  
+  /* Remove any default margins/offsets that cause misalignment */
+  margin: 0 !important;
+}
+
+/* Remove all Tailwind animation classes that conflict */
+[data-radix-select-content][class*="animate-"],
+[data-radix-select-content][class*="slide-"],
+[data-radix-select-content][class*="zoom-"],
+[data-radix-select-content][class*="fade-"] {
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Custom Select Dropdown Animations - COMPLETELY CUSTOM */
+@keyframes selectSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes selectSlideUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+/* Apply ONLY our custom animations */
+.select-content-custom {
+  /* Reset everything first */
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
+  
+  /* Apply our custom animation */
+  animation-duration: 200ms !important;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation-fill-mode: forwards !important;
+  
+  /* Ensure proper transform origin */
+  transform-origin: top center !important;
+}
+
+/* Only apply our animations when opening/closing */
+.select-content-custom[data-state="open"] {
+  animation-name: selectSlideDown !important;
+}
+
+.select-content-custom[data-state="closed"] {
+  animation-name: selectSlideUp !important;
+}
+
+/* Force positioning to be directly below trigger */
+.select-content-custom[data-side="bottom"] {
+  transform-origin: top center !important;
+  margin-top: 4px !important;
+}
+
+.select-content-custom[data-side="top"] {
+  transform-origin: bottom center !important;
+  margin-bottom: 4px !important;
+}
+
+/* Nuclear option: Override everything with !important */
+[data-radix-select-content].select-content-custom * {
+  animation: inherit !important;
+  transform: inherit !important;
+}
+
+/* Final positioning fix - ensure dropdown is positioned relative to its trigger */
+[data-radix-select-trigger] {
+  position: relative !important;
+}
+
+[data-radix-select-content] {
+  /* Ensure the dropdown is positioned absolutely relative to the trigger */
+  position: absolute !important;
+  top: calc(100% + 4px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
+/* Override Radix's internal positioning system completely */
+[data-radix-popper-content-wrapper] {
+  position: relative !important;
+  transform: none !important;
+}
+
+/* Ensure the portal doesn't interfere with positioning */
+[data-radix-select-portal] {
+  position: relative !important;
+}
