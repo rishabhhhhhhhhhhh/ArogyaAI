@@ -10,12 +10,18 @@ const {
   getDashboardData, 
   getPatientQueue, 
   getAnalytics,
-  getAllDoctors 
+  getAllDoctors,
+  submitVerification,
+  getVerificationStatus
 } = require('../controllers/doctor.controller');
 
 // Doctor profile routes
 router.get('/me', auth.protect, auth.restrictTo('doctor'), getMyProfile);
 router.patch('/me', auth.protect, auth.restrictTo('doctor'), updateDoctor);
+
+// Doctor verification routes
+router.post('/verification/submit', auth.protect, auth.restrictTo('doctor'), submitVerification);
+router.get('/verification/status', auth.protect, auth.restrictTo('doctor'), getVerificationStatus);
 
 // Doctor dashboard routes
 router.get('/dashboard', auth.protect, auth.restrictTo('doctor'), getDashboardData);

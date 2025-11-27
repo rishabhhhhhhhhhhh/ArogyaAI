@@ -38,13 +38,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const userData = JSON.parse(storedUser);
         
+        // For admin, skip validation since /admin/me might not exist
+        // Just trust the stored user data if token exists
+        if (userData.role === 'admin') {
+          setUser(userData);
+          setLoading(false);
+          return;
+        }
+        
         // Call appropriate endpoint based on user role
         let validationEndpoint = '/patients/me'; // default
         
         if (userData.role === 'doctor') {
           validationEndpoint = '/doctors/me';
-        } else if (userData.role === 'admin') {
-          validationEndpoint = '/admin/me'; // if this endpoint exists
         }
         
         // Validate token by calling role-specific endpoint

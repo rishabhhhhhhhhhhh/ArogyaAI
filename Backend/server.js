@@ -122,10 +122,6 @@ const signalingLimiter = rateLimit({
   message: { message: 'Too many signaling requests, please slow down.' },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    // Use user ID if available, otherwise IP
-    return req.user?.id || req.ip;
-  }
 });
 
 // Very strict rate limiting for session creation
@@ -135,9 +131,6 @@ const sessionCreationLimiter = rateLimit({
   message: { message: 'Too many session creation attempts, please wait.' },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.user?.id || req.ip;
-  }
 });
 
 app.use(generalLimiter);

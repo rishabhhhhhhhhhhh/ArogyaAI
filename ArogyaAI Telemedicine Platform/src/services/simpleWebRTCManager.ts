@@ -22,6 +22,7 @@ export class SimpleWebRTCManager {
   private signalingClient: any = null;
   private currentUserId: string = '';
   private currentUserRole: 'doctor' | 'patient' = 'doctor';
+  private iceCandidateQueue: RTCIceCandidateInit[] = [];
 
   // Event handlers
   public onRemoteStream: ((stream: MediaStream) => void) | null = null;
@@ -62,7 +63,7 @@ export class SimpleWebRTCManager {
 
       // Simple WebRTC configuration
       const rtcConfig: RTCConfiguration = {
-        iceServers: [
+        iceServers: config?.iceServers || [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
           { urls: 'stun:stun2.l.google.com:19302' },
@@ -116,39 +117,57 @@ export class SimpleWebRTCManager {
 
     // Handle remote stream - This is critical for video display
     this.peerConnection.ontrack = (event) => {
-      console.log('🎥 RECEIVED REMOTE TRACK:', {
+      console.log('🎥 ========================================');
+      console.log('🎥 RECEIVED REMOTE TRACK EVENT');
+      console.log('🎥 ========================================');
+      console.log('🎥 Track Details:', {
         kind: event.track.kind,
         id: event.track.id,
         enabled: event.track.enabled,
         readyState: event.track.readyState,
-        streamsCount: event.streams.length,
-        trackLabel: event.track.label
+        muted: event.track.muted,
+        label: event.track.label
       });
+      console.log('🎥 Streams Count:', event.streams.length);
 
       // Handle the track immediately
       if (event.streams && event.streams[0]) {
         const remoteStream = event.streams[0];
-        console.log('🎥 REMOTE STREAM DETAILS:', {
+        console.log('🎥 Using existing stream from event');
+        console.log('🎥 Remote Stream Details:', {
           id: remoteStream.id,
           videoTracks: remoteStream.getVideoTracks().length,
           audioTracks: remoteStream.getAudioTracks().length,
-          active: remoteStream.active
+          active: remoteStream.active,
+          videoTrackDetails: remoteStream.getVideoTracks().map(t => ({
+            id: t.id,
+            enabled: t.enabled,
+            readyState: t.readyState,
+            muted: t.muted
+          })),
+          audioTrackDetails: remoteStream.getAudioTracks().map(t => ({
+            id: t.id,
+            enabled: t.enabled,
+            readyState: t.readyState,
+            muted: t.muted
+          }))
         });
 
         if (this.onRemoteStream) {
-          console.log('🎥 CALLING onRemoteStream callback with stream:', remoteStream.id);
+          console.log('🎥 ✅ Calling onRemoteStream callback');
           this.onRemoteStream(remoteStream);
+          console.log('🎥 ✅ onRemoteStream callback completed');
         } else {
-          console.error('🎥 NO onRemoteStream callback set!');
+          console.error('🎥 ❌ NO onRemoteStream callback set!');
         }
       } else {
-        console.warn('🎥 No streams in track event, creating new stream');
+        console.warn('🎥 ⚠️ No streams in track event, creating new stream');
         
         // If no stream is provided, create one and add the track
         const remoteStream = new MediaStream();
         remoteStream.addTrack(event.track);
         
-        console.log('🎥 CREATED NEW REMOTE STREAM:', {
+        console.log('🎥 Created new remote stream:', {
           id: remoteStream.id,
           videoTracks: remoteStream.getVideoTracks().length,
           audioTracks: remoteStream.getAudioTracks().length,
@@ -156,10 +175,15 @@ export class SimpleWebRTCManager {
         });
 
         if (this.onRemoteStream) {
-          console.log('🎥 CALLING onRemoteStream callback with new stream:', remoteStream.id);
+          console.log('🎥 ✅ Calling onRemoteStream callback with new stream');
           this.onRemoteStream(remoteStream);
+          console.log('🎥 ✅ onRemoteStream callback completed');
+        } else {
+          console.error('🎥 ❌ NO onRemoteStream callback set!');
         }
       }
+      
+      console.log('🎥 ========================================');
     };
 
     // Handle connection state changes
@@ -393,10 +417,33 @@ export class SimpleWebRTCManager {
         sdpLength: description.sdp?.length || 0
       });
       
-      await this.peerConnection.setRemoteDescription(description);
-      console.log('📥 Remote description set successfully');
+      await this.peerConnection.setRemoteDescription(new RTCSessionDescription(description));
+      
+      console.log('📥 ✅ Remote description set successfully');
+      
+      // Process queued ICE candidates
+      if (this.iceCandidateQueue.length > 0) {
+        console.log(`📥 Processing ${this.iceCandidateQueue.length} queued ICE candidates...`);
+        
+        while (this.iceCandidateQueue.length > 0) {
+          const candidate = this.iceCandidateQueue.shift();
+          if (candidate) {
+            try {
+              console.log('📥 Adding queued ICE candidate');
+              const iceCandidate = new RTCIceCandidate(candidate);
+              await this.peerConnection.addIceCandidate(iceCandidate);
+              console.log('📥 ✅ Queued ICE candidate added');
+            } catch (error) {
+              console.warn('📥 ⚠️ Failed to add queued ICE candidate:', error);
+              // Continue with other candidates
+            }
+          }
+        }
+        
+        console.log('📥 ✅ All queued ICE candidates processed');
+      }
     } catch (error) {
-      console.error('📥 Error setting remote description:', error);
+      console.error('📥 ❌ Error setting remote description:', error);
       throw new Error(`Failed to set remote description: ${error}`);
     }
   }
@@ -410,16 +457,25 @@ export class SimpleWebRTCManager {
     }
 
     try {
+      // Check if remote description is set
+      if (!this.peerConnection.remoteDescription) {
+        console.log('🧊 Queueing ICE candidate (remote description not set yet)');
+        this.iceCandidateQueue.push(candidate);
+        return;
+      }
+
       console.log('🧊 Adding ICE candidate:', {
         candidate: candidate.candidate?.substring(0, 50) + '...',
         sdpMLineIndex: candidate.sdpMLineIndex,
         sdpMid: candidate.sdpMid
       });
       
-      await this.peerConnection.addIceCandidate(candidate);
-      console.log('🧊 ICE candidate added successfully');
+      // Create RTCIceCandidate object and add it
+      const iceCandidate = new RTCIceCandidate(candidate);
+      await this.peerConnection.addIceCandidate(iceCandidate);
+      console.log('🧊 ✅ ICE candidate added successfully');
     } catch (error) {
-      console.error('🧊 Error adding ICE candidate:', error);
+      console.error('🧊 ❌ Error adding ICE candidate:', error);
       // Don't throw error for ICE candidate failures as they're common
       console.warn('🧊 ICE candidate failed, but continuing...');
     }

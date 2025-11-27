@@ -1,16 +1,13 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Activity,
   LayoutDashboard,
   Calendar,
   FileText,
   Brain,
   Users,
-  UserCheck,
   Settings,
   LogOut,
   Stethoscope,
-  ShieldCheck,
   BarChart3,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
@@ -56,9 +53,6 @@ export function DashboardSidebar({ userType }: DashboardSidebarProps) {
 
   const adminNav = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
-    { icon: UserCheck, label: 'Doctor Verification', path: '/admin/verification' },
-    { icon: Users, label: 'User Management', path: '/admin/users' },
-    { icon: BarChart3, label: 'Reports', path: '/admin/reports' },
   ];
 
   const navItems = userType === 'patient' ? patientNav : userType === 'doctor' ? doctorNav : adminNav;
@@ -96,23 +90,26 @@ export function DashboardSidebar({ userType }: DashboardSidebarProps) {
 
           <div className="flex-1" />
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                to="/settings"
-                className={`p-3 rounded-xl transition-all duration-200 ${
-                  isActive('/settings')
-                    ? 'bg-primary text-primary-foreground glow-teal'
-                    : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
-                }`}
-              >
-                <Settings className="w-6 h-6" />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>Settings</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Show Settings button only for patient and doctor, not for admin */}
+          {userType !== 'admin' && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/settings"
+                  className={`p-3 rounded-xl transition-all duration-200 ${
+                    isActive('/settings')
+                      ? 'bg-primary text-primary-foreground glow-teal'
+                      : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
+                  }`}
+                >
+                  <Settings className="w-6 h-6" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Settings</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>

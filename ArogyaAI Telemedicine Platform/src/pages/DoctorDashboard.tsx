@@ -48,6 +48,9 @@ export function DoctorDashboard() {
     refreshAll();
   }, []);
 
+  // Show verification prompt if not verified
+  const showVerificationPrompt = profile && !profile.verified && profile.verificationStatus === 'pending';
+
   // Refresh data based on active tab
   const handleRefresh = async () => {
     try {
@@ -124,6 +127,29 @@ export function DoctorDashboard() {
               </Button>
             </div>
           </div>
+
+          {/* Verification Prompt */}
+          {showVerificationPrompt && (
+            <div className="mb-8 p-6 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+              <div className="flex items-start gap-4">
+                <AlertCircle className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-1" />
+                <div className="flex-1">
+                  <h3 className="text-lg font-['Poppins'] font-semibold text-yellow-600 mb-2">
+                    Complete Your Verification
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Your account is not yet verified. Please submit your credentials and documents to start accepting patients.
+                  </p>
+                  <Link to="/doctor/verification">
+                    <Button className="bg-yellow-500 hover:bg-yellow-600 text-black">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Complete Verification
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Metrics */}
           <div className="grid md:grid-cols-4 gap-6 mb-8">

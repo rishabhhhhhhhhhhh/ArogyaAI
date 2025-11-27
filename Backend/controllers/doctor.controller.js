@@ -35,7 +35,13 @@ exports.getAllDoctors = async (req, res, next) => {
   try {
     const { specialization, available, page = 1, limit = 10 } = req.query;
     
-    const query = { isVerified: true, isActive: true };
+    // Only show verified and active doctors to patients
+    const query = { 
+      verified: true, 
+      isVerified: true, 
+      isActive: true,
+      verificationStatus: 'verified'
+    };
     
     // Filter by specialization if provided
     if (specialization) {
@@ -310,3 +316,61 @@ function calculateWaitTime(scheduledAt) {
   const minutes = diffMinutes % 60;
   return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
 }
+
+// Submit verification documents
+exports.submitVerification = async (req, res, next) => {
+  try {
+    const doctor = await Doctor.findOne({ userId: req.user._id });
+    if (!doctor) return res.status(404).json({ success: false, message: 'Doctor profile not found' });
+
+    const {
+      registrationNumber,
+      qualifications,
+      specialization,
+      experience,
+      phoneNumber,
+      address,
+      languages,
+      education,
+      clinic,
+      bio,
+      verificationDocuments
+    } = req.body;
+
+    // Update doctor profile with verification information
+    if (registrationNumber) doctor.registrationNumber = registrationNumber;
+    if (qualifications) doctor.qualifications = qualifications;
+    if (specialization) doctor.specialization = specialization;
+    if (experience) doctor.experience = experience;
+    if (phoneNumber) doctor.phoneNumber = phoneNumber;
+    if (address) doctor.address = address;
+    if (languages) doctor.languages = languages;
+    if (education) doctor.education = education;
+    if (clinic) doctor.clinic = clinic;
+    if (bio) doctor.bio = bio;
+    if (verificationDocuments) doctor.verificationDocuments = verificationDocuments;
+
+    doctor.verificationStatus = 'submitted';
+    doctor.verificationSubmittedAt = new Date();
+
+    await doctor.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Verification documents submitted successfully',
+      data: doctor 
+    });
+  } catch (err) { next(err); }
+};
+
+// Get verification status
+exports.getVerificationStatus = async (req, res, next) => {
+  try {
+    const doctor = await Doctor.findOne({ userId: req.user._id })
+      .select('verificationStatus verificationSubmittedAt verificationCompletedAt rejectionReason verified isVerified');
+    
+    if (!doctor) return res.status(404).json({ success: false, message: 'Doctor profile not found' });
+
+    res.json({ success: true, data: doctor });
+  } catch (err) { next(err); }
+};

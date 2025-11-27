@@ -20,6 +20,7 @@ export interface DoctorProfile {
   };
   profileImage?: string;
   verified: boolean;
+  verificationStatus?: string;
   availableSlots: Array<{
     date: Date;
     slots: string[];

@@ -66,6 +66,10 @@ export function ConsultationPage() {
     try {
       setSessionError(null);
       
+      console.log('🔧 Initializing session for appointment:', id);
+      console.log('🔧 User role:', userRole);
+      console.log('🔧 Is initiator:', isInitiator);
+      
       // Call the joinAppointment endpoint to create/join the session
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await fetch(`${apiUrl}/appointments/${id}/join`, {
@@ -82,9 +86,11 @@ export function ConsultationPage() {
       }
 
       const data = await response.json();
+      console.log('🔧 ✅ Session initialized successfully:', data.data);
       setAppointmentData(data.data);
       setSessionReady(true);
     } catch (error: any) {
+      console.error('🔧 ❌ Session initialization failed:', error);
       setSessionError(error.message);
       toast.error(`Failed to join session: ${error.message}`);
     }
@@ -135,16 +141,35 @@ export function ConsultationPage() {
 
   // Set up video elements when streams are available
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
-      localVideoRef.current.play().catch(() => {
-        // Try to play again after a short delay
-        setTimeout(() => {
-          if (localVideoRef.current) {
-            localVideoRef.current.play().catch(() => {});
-          }
-        }, 1000);
-      });
+    const videoElement = localVideoRef.current;
+    
+    if (videoElement && localStream) {
+      console.log('🎥 Setting up local video element with stream:', localStream.id);
+      videoElement.srcObject = localStream;
+      
+      // Ensure video plays
+      const playVideo = () => {
+        videoElement.play()
+          .then(() => {
+            console.log('🎥 Local video playing successfully');
+          })
+          .catch((error) => {
+            console.warn('🎥 Local video play failed, retrying...', error);
+            setTimeout(() => {
+              videoElement.play().catch(e => console.error('🎥 Local video retry failed:', e));
+            }, 500);
+          });
+      };
+
+      // Try to play immediately
+      playVideo();
+      
+      // Also listen for loadedmetadata event
+      videoElement.addEventListener('loadedmetadata', playVideo);
+      
+      return () => {
+        videoElement.removeEventListener('loadedmetadata', playVideo);
+      };
     }
   }, [localStream]);
 
@@ -152,24 +177,77 @@ export function ConsultationPage() {
     const videoElement = remoteVideoRef.current;
     
     if (videoElement && remoteStream) {
+      console.log('🎥 Setting up remote video element with stream:', {
+        streamId: remoteStream.id,
+        videoTracks: remoteStream.getVideoTracks().length,
+        audioTracks: remoteStream.getAudioTracks().length,
+        active: remoteStream.active
+      });
+      
+      // Set srcObject if different
       if (videoElement.srcObject !== remoteStream) {
         videoElement.srcObject = remoteStream;
+        console.log('🎥 Remote video srcObject set');
       }
+      
+      // Function to play video
+      const playVideo = () => {
+        console.log('🎥 Attempting to play remote video...');
+        videoElement.play()
+          .then(() => {
+            console.log('🎥 ✅ Remote video playing successfully!');
+          })
+          .catch((error) => {
+            console.warn('🎥 ⚠️ Remote video play failed, retrying...', error);
+            // Retry after a short delay
+            setTimeout(() => {
+              videoElement.play()
+                .then(() => console.log('🎥 ✅ Remote video playing after retry'))
+                .catch(e => console.error('🎥 ❌ Remote video retry failed:', e));
+            }, 500);
+          });
+      };
+
+      // Try to play immediately if ready
+      if (videoElement.readyState >= 2) {
+        console.log('🎥 Video element ready, playing immediately');
+        playVideo();
+      }
+      
+      // Listen for various events to ensure playback
+      const handleLoadedMetadata = () => {
+        console.log('🎥 Remote video metadata loaded');
+        playVideo();
+      };
       
       const handleCanPlay = () => {
-        videoElement.play().catch(() => {});
+        console.log('🎥 Remote video can play');
+        playVideo();
       };
       
-      videoElement.addEventListener('canplay', handleCanPlay);
+      const handleLoadedData = () => {
+        console.log('🎥 Remote video data loaded');
+        playVideo();
+      };
       
-      if (videoElement.readyState >= 2) {
-        videoElement.play().catch(() => {});
-      }
+      videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
+      videoElement.addEventListener('canplay', handleCanPlay);
+      videoElement.addEventListener('loadeddata', handleLoadedData);
+      
+      // Force play after a short delay as fallback
+      const playTimeout = setTimeout(() => {
+        console.log('🎥 Forcing remote video play after timeout');
+        playVideo();
+      }, 1000);
       
       return () => {
+        videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
         videoElement.removeEventListener('canplay', handleCanPlay);
+        videoElement.removeEventListener('loadeddata', handleLoadedData);
+        clearTimeout(playTimeout);
       };
     } else if (videoElement && !remoteStream) {
+      console.log('🎥 Clearing remote video srcObject');
       videoElement.srcObject = null;
     }
   }, [remoteStream]);
@@ -189,28 +267,36 @@ export function ConsultationPage() {
     }
   }, [remoteStream]);
 
-  // Auto-start call when session is ready and signaling is connected
-  useEffect(() => {
-    if (!callStarted && isSignalingConnected && sessionReady) {
-      const timer = setTimeout(() => {
-        handleStartCall();
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [callStarted, isSignalingConnected, sessionReady]);
+  // Note: Auto-start is now handled in useWebRTC hook via onUserJoined event
+  // This ensures proper timing - initiator starts when remote user joins
 
   const handleStartCall = async () => {
     try {
+      console.log('📞 handleStartCall called', {
+        isSignalingConnected,
+        callStarted,
+        hasLocalStream: !!localStream,
+        isInitiator
+      });
+      
       if (!isSignalingConnected) {
+        console.warn('📞 ⚠️ Signaling not connected yet');
         toast.error('Signaling not connected. Please wait...');
         return;
       }
       
+      if (callStarted) {
+        console.log('📞 ℹ️ Call already started, skipping');
+        return;
+      }
+      
+      console.log('📞 🚀 Starting call...');
       await startCall();
       setCallStarted(true);
+      console.log('📞 ✅ Call started successfully');
       toast.success('Call started successfully');
     } catch (error) {
+      console.error('📞 ❌ Failed to start call:', error);
       toast.error(`Failed to start call: ${error}`);
     }
   };
@@ -356,9 +442,22 @@ export function ConsultationPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge className={`${isConnected ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'} pulse-glow`}>
-              {isConnected ? 'Connected' : 'Connecting...'}
+            <Badge className={`${isSignalingConnected ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' : 'bg-gray-500/10 text-gray-600 border-gray-500/20'}`}>
+              {isSignalingConnected ? '📡 Signaling' : '📡 No Signal'}
             </Badge>
+            <Badge className={`${isConnected ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'} pulse-glow`}>
+              {isConnected ? '🔗 Connected' : '🔗 Connecting...'}
+            </Badge>
+            {!callStarted && isSignalingConnected && (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handleStartCall}
+                className="text-xs"
+              >
+                🚀 Start Call
+              </Button>
+            )}
             {networkQuality && (
               <Badge className={`${
                 networkQuality === 'excellent' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
@@ -384,7 +483,6 @@ export function ConsultationPage() {
                 autoPlay
                 playsInline
                 controls={false}
-                muted={false}
                 className="w-full h-full object-cover bg-black"
                 style={{ transform: 'scaleX(-1)' }}
               />

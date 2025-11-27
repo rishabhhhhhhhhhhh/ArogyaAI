@@ -42,6 +42,7 @@ export class SignalingClient {
   public onChatMessage: ((message: ChatMessage) => void) | null = null;
   public onConnectionStateChange: ((connected: boolean) => void) | null = null;
   public onError: ((error: string) => void) | null = null;
+  public onUserJoined: ((data: any) => void) | null = null;
 
   constructor() {
     this.errorHandler = new WebRTCErrorHandler({
@@ -81,13 +82,13 @@ export class SignalingClient {
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
         const baseUrl = apiUrl.replace('/api', ''); // Remove /api suffix
         const serverUrl = baseUrl; // Keep HTTP protocol for Socket.IO
-        
+
         console.log('📡 Connecting to signaling server:', serverUrl);
         console.log('📡 Token length:', this.token.length);
         console.log('📡 Token preview:', this.token.substring(0, 50) + '...');
         console.log('📡 Session ID:', sessionId);
         console.log('📡 Environment API URL:', import.meta.env.VITE_API_URL);
-        
+
         // Set connection timeout
         this.setConnectionTimeout(15000, () => {
           reject(new Error('Signaling server connection timeout'));
@@ -113,9 +114,9 @@ export class SignalingClient {
           this.reconnectDelay = 1000;
           this.clearConnectionTimeout();
           this.startHeartbeat();
-          
+
           this.notificationSystem.notifyConnectionStatus('connected', 'Connected to signaling server');
-          
+
           if (this.onConnectionStateChange) {
             console.log('📡 ✅ Calling onConnectionStateChange(true)');
             this.onConnectionStateChange(true);
@@ -140,17 +141,17 @@ export class SignalingClient {
           console.error('📡 ❌ Session ID:', sessionId);
           console.error('📡 ❌ Error details:', error.message, error.description, error.context);
           this.clearConnectionTimeout();
-          
+
           this.errorHandler.handleError(
             ErrorType.SIGNALING_ERROR,
             'Failed to connect to signaling server',
             error,
             { sessionId, serverUrl }
           );
-          
-          this.notificationSystem.notifyConnectionStatus('failed', 
+
+          this.notificationSystem.notifyConnectionStatus('failed',
             `Connection failed: ${error.message}`);
-          
+
           reject(new Error(`Failed to connect to signaling server: ${error.message}`));
         });
 
@@ -158,10 +159,10 @@ export class SignalingClient {
           console.log('Signaling Socket.IO disconnected:', reason);
           this.isConnected = false;
           this.stopHeartbeat();
-          
-          this.notificationSystem.notifyConnectionStatus('disconnected', 
+
+          this.notificationSystem.notifyConnectionStatus('disconnected',
             `Disconnected: ${reason}`);
-          
+
           if (this.onConnectionStateChange) {
             this.onConnectionStateChange(false);
           }
@@ -223,7 +224,7 @@ export class SignalingClient {
       this.socket.disconnect();
       this.socket = null;
     }
-    
+
     this.isConnected = false;
     this.reconnectAttempts = this.maxReconnectAttempts; // Prevent reconnection
   }
@@ -334,6 +335,9 @@ export class SignalingClient {
     // Handle session events
     this.socket.on('user-joined', (data: any) => {
       console.log('User joined session:', data);
+      if (this.onUserJoined) {
+        this.onUserJoined(data);
+      }
     });
 
     this.socket.on('user-left', (data: any) => {
@@ -375,13 +379,13 @@ export class SignalingClient {
     setTimeout(() => {
       this.connect(this.sessionId, this.token).catch((error) => {
         console.error('Reconnection failed:', error);
-        
+
         // Exponential backoff with jitter (max 30 seconds)
         this.reconnectDelay = Math.min(
-          this.reconnectDelay * 2 + Math.random() * 1000, 
+          this.reconnectDelay * 2 + Math.random() * 1000,
           30000
         );
-        
+
         // Try again if we haven't exceeded max attempts
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           this.attemptReconnection();
@@ -435,9 +439,9 @@ export class SignalingClient {
    */
   private handleDisconnection(reason: string): void {
     // Determine if reconnection should be attempted
-    const shouldReconnect = reason !== 'io client disconnect' && 
-                           reason !== 'transport close' &&
-                           this.reconnectAttempts < this.maxReconnectAttempts;
+    const shouldReconnect = reason !== 'io client disconnect' &&
+      reason !== 'transport close' &&
+      this.reconnectAttempts < this.maxReconnectAttempts;
 
     if (shouldReconnect) {
       this.attemptReconnection();
@@ -490,7 +494,7 @@ export class SignalingClient {
    */
   private startHeartbeat(): void {
     this.stopHeartbeat();
-    
+
     this.heartbeatInterval = setInterval(() => {
       if (this.socket && this.isConnected) {
         this.lastHeartbeat = Date.now();
@@ -559,9 +563,9 @@ export class SignalingClient {
         return;
       }
 
-      this.socket.emit('create-session', { 
-        patientId, 
-        appointmentId 
+      this.socket.emit('create-session', {
+        patientId,
+        appointmentId
       }, (response: any) => {
         if (response.success) {
           resolve(response.session);
@@ -580,12 +584,12 @@ export class SignalingClient {
   cleanup(): void {
     this.stopHeartbeat();
     this.clearConnectionTimeout();
-    
+
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
     }
-    
+
     this.isConnected = false;
     this.reconnectAttempts = this.maxReconnectAttempts; // Prevent reconnection
   }

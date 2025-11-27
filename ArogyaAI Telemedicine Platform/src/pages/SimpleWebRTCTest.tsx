@@ -30,6 +30,7 @@ export function SimpleWebRTCTest() {
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
+        localVideoRef.current.play().catch(e => addLog(`Play error: ${e.message}`));
       }
       addLog(`Local media started: ${stream.getVideoTracks().length} video, ${stream.getAudioTracks().length} audio tracks`);
     } catch (error) {
@@ -60,6 +61,10 @@ export function SimpleWebRTCTest() {
           setRemoteStream(stream);
           if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = stream;
+            // Explicitly play the video
+            remoteVideoRef.current.play()
+              .then(() => addLog('Remote video playing'))
+              .catch(e => addLog(`Remote video play error: ${e.message}`));
           }
           addLog(`Remote stream set: ${stream.getVideoTracks().length} video, ${stream.getAudioTracks().length} audio tracks`);
         }

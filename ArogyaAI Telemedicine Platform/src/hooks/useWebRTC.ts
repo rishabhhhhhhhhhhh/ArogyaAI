@@ -24,25 +24,25 @@ export interface UseWebRTCReturn {
   connectionState: RTCPeerConnectionState | null;
   isSignalingConnected: boolean;
   isDataChannelAvailable: boolean;
-  
+
   // Media streams
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
-  
+
   // Media controls
   isVideoEnabled: boolean;
   isAudioEnabled: boolean;
   toggleVideo: () => void;
   toggleAudio: () => void;
-  
+
   // Call management
   startCall: () => Promise<void>;
   endCall: () => void;
-  
+
   // Chat functionality
   sendChatMessage: (message: string) => void;
   chatMessages: ChatMessage[];
-  
+
   // Error handling and monitoring
   error: string | null;
   clearError: () => void;
@@ -52,28 +52,28 @@ export interface UseWebRTCReturn {
 
 export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
   const { sessionId, isInitiator, token, userId, userRole, config, enabled = true } = options;
-  
+
   // Refs for managers to persist across re-renders
   const webrtcManagerRef = useRef<SimpleWebRTCManager | null>(null);
   const signalingClientRef = useRef<SignalingClient | null>(null);
-  
+
   // Connection state
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] = useState<RTCPeerConnectionState | null>(null);
   const [isSignalingConnected, setIsSignalingConnected] = useState(false);
   const [isDataChannelAvailable, setIsDataChannelAvailable] = useState(false);
-  
+
   // Media streams
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-  
+
   // Media controls
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  
+
   // Chat
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  
+
   // Error handling
   const [error, setError] = useState<string | null>(null);
   const [networkQuality, setNetworkQuality] = useState<'excellent' | 'good' | 'fair' | 'poor'>('good');
@@ -85,24 +85,29 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
   const initializeWebRTC = useCallback(async () => {
     try {
       setError(null);
-      
+
       // Initialize Signaling Client first
       const signalingClient = new SignalingClient();
       await signalingClient.connect(sessionId, token);
       signalingClientRef.current = signalingClient;
-      
+
+      const backendIceServers = signalingClient.getIceServers();
+      const finalConfig = {
+      ...config,
+      iceServers: backendIceServers.length > 0 ? backendIceServers : config?.iceServers
+      };
       // Initialize Simple WebRTC Manager with signaling client and user info
       const webrtcManager = new SimpleWebRTCManager();
       await webrtcManager.initializeConnection(
-        sessionId, 
-        isInitiator, 
-        config, 
-        signalingClient, 
-        userId, 
+        sessionId,
+        isInitiator,
+        finalConfig,
+        signalingClient,
+        userId,
         userRole
       );
       webrtcManagerRef.current = webrtcManager;
-      
+
       // Set up WebRTC event handlers
       webrtcManager.onRemoteStream = (stream: MediaStream) => {
         console.log('🎥 useWebRTC: Received remote stream callback:', {
@@ -118,7 +123,7 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
             label: track.label
           }))
         });
-        
+
         // Ensure the stream is active and has tracks
         if (stream.active && (stream.getVideoTracks().length > 0 || stream.getAudioTracks().length > 0)) {
           console.log('🎥 Setting remote stream - stream is active with tracks');
@@ -129,25 +134,25 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
             videoTracks: stream.getVideoTracks().length,
             audioTracks: stream.getAudioTracks().length
           });
-          
+
           // Still set it, but log the issue
           setRemoteStream(stream);
         }
       };
-      
+
       webrtcManager.onConnectionStateChange = (state: RTCPeerConnectionState) => {
         setConnectionState(state);
         setIsConnected(state === 'connected');
       };
-      
+
       webrtcManager.onIceCandidate = (candidate: RTCIceCandidate) => {
         signalingClient.sendIceCandidate(candidate);
       };
-      
+
       webrtcManager.onChatMessage = (message: ChatMessage) => {
         setChatMessages(prev => [...prev, message]);
       };
-      
+
       webrtcManager.onDataChannelStateChange = (state: RTCDataChannelState) => {
         setIsDataChannelAvailable(state === 'open');
       };
@@ -161,18 +166,18 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
       //   setNetworkQuality(quality as 'excellent' | 'good' | 'fair' | 'poor');
       //   setNetworkMetrics(metrics);
       // };
-      
+
       // Set up signaling event handlers
       signalingClient.onOffer = async (offer: RTCSessionDescriptionInit) => {
         try {
           console.log('Received offer from remote peer, creating answer...');
-          
+
           // If we're the initiator and we receive an offer, there might be a collision
           // Handle this by comparing user IDs or roles
           if (isInitiator) {
             console.log('Offer collision detected (both sides initiated), handling as non-initiator');
           }
-          
+
           const answer = await webrtcManager.createAnswer(offer);
           signalingClient.sendAnswer(answer);
           console.log('Answer sent successfully');
@@ -181,7 +186,7 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
           setError(`Failed to handle offer: ${err}`);
         }
       };
-      
+
       signalingClient.onAnswer = async (answer: RTCSessionDescriptionInit) => {
         try {
           console.log('Received answer, setting remote description...');
@@ -192,7 +197,7 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
           setError(`Failed to handle answer: ${err}`);
         }
       };
-      
+
       signalingClient.onIceCandidate = async (candidate: RTCIceCandidateInit) => {
         try {
           console.log('Received ICE candidate, adding...');
@@ -202,14 +207,40 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
           // Don't set error for ICE candidate failures as they're common
         }
       };
-      
+
       signalingClient.onChatMessage = (message: ChatMessage) => {
         setChatMessages(prev => [...prev, message]);
       };
-      
+
       signalingClient.onConnectionStateChange = (connected: boolean) => {
         console.log('📡 Signaling connection state changed:', connected);
         setIsSignalingConnected(connected);
+      };
+
+      signalingClient.onUserJoined = (data) => {
+        console.log('🚪 ========================================');
+        console.log('🚪 USER JOINED EVENT RECEIVED');
+        console.log('🚪 ========================================');
+        console.log('🚪 Remote user data:', data);
+        console.log('🚪 Current user is initiator:', isInitiator);
+        console.log('🚪 Current user role:', userRole);
+        
+        // If we are the initiator (Doctor) and the new user is the remote peer
+        if (isInitiator) {
+          console.log('🚀 ✅ Initiator detected remote user joining!');
+          console.log('🚀 Starting call in 2 seconds to allow remote peer to fully initialize...');
+          
+          // We add a delay to ensure the remote peer is fully ready to receive
+          setTimeout(() => {
+            console.log('🚀 ⏰ Timeout elapsed, calling startCall() now...');
+            startCall().catch(err => {
+              console.error('🚀 ❌ Failed to start call from onUserJoined:', err);
+            });
+          }, 2000);
+        } else {
+          console.log('⏳ Non-initiator (patient) waiting for offer from doctor...');
+        }
+        console.log('🚪 ========================================');
       };
 
       // Auto-start local media for immediate camera preview
@@ -229,7 +260,7 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
         console.error('Failed to start local media:', mediaError);
         setError(`Camera/microphone access denied: ${mediaError}`);
       }
-      
+
     } catch (err) {
       setError(`Failed to initialize WebRTC: ${err}`);
     }
@@ -242,14 +273,14 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
     try {
       setError(null);
       console.log('Starting video call...');
-      
+
       const webrtcManager = webrtcManagerRef.current;
       const signalingClient = signalingClientRef.current;
-      
+
       if (!webrtcManager || !signalingClient) {
         throw new Error('WebRTC not initialized');
       }
-      
+
       // Ensure local media is started (may already be started in initialization)
       if (!localStream) {
         console.log('Starting local media for call...');
@@ -258,10 +289,10 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
         setIsVideoEnabled(webrtcManager.isVideoEnabled());
         setIsAudioEnabled(webrtcManager.isAudioEnabled());
       }
-      
+
       // Wait a bit for media to be fully ready
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Create and send offer if initiator
       if (isInitiator) {
         console.log('Creating and sending offer as initiator...');
@@ -271,7 +302,7 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
       } else {
         console.log('Waiting for offer as non-initiator...');
       }
-      
+
     } catch (err) {
       console.error('Failed to start call:', err);
       setError(`Failed to start call: ${err}`);
@@ -284,15 +315,15 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
   const endCall = useCallback(() => {
     const webrtcManager = webrtcManagerRef.current;
     const signalingClient = signalingClientRef.current;
-    
+
     if (webrtcManager) {
       webrtcManager.cleanup();
     }
-    
+
     if (signalingClient) {
       signalingClient.disconnect();
     }
-    
+
     // Reset state
     setLocalStream(null);
     setRemoteStream(null);
@@ -303,7 +334,7 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
     setIsVideoEnabled(true);
     setIsAudioEnabled(true);
     setChatMessages([]);
-    
+
     // Clear refs
     webrtcManagerRef.current = null;
     signalingClientRef.current = null;
@@ -338,14 +369,14 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
   const sendChatMessage = useCallback((message: string) => {
     try {
       const webrtcManager = webrtcManagerRef.current;
-      
+
       if (!webrtcManager) {
         throw new Error('WebRTC not initialized');
       }
-      
+
       // WebRTC manager handles data channel first, then WebSocket fallback internally
       webrtcManager.sendChatMessage(message);
-      
+
     } catch (err) {
       setError(`Failed to send message: ${err}`);
     }
@@ -363,7 +394,7 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
     if (enabled) {
       initializeWebRTC();
     }
-    
+
     // Cleanup on unmount or when disabled
     return () => {
       if (!enabled) {
@@ -378,25 +409,25 @@ export function useWebRTC(options: UseWebRTCOptions): UseWebRTCReturn {
     connectionState,
     isSignalingConnected,
     isDataChannelAvailable,
-    
+
     // Media streams
     localStream,
     remoteStream,
-    
+
     // Media controls
     isVideoEnabled,
     isAudioEnabled,
     toggleVideo,
     toggleAudio,
-    
+
     // Call management
     startCall,
     endCall,
-    
+
     // Chat functionality
     sendChatMessage,
     chatMessages,
-    
+
     // Error handling and monitoring
     error,
     clearError,

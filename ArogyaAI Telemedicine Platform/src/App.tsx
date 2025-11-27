@@ -21,6 +21,7 @@ import Notifications from './pages/Notifications';
 import { Appointments } from './pages/Appointments';
 import { Prescriptions } from './pages/Prescriptions';
 import { BookConsultation } from './pages/BookConsultation';
+import { DoctorVerification } from './pages/DoctorVerification';
 import { WebSocketTest } from './pages/WebSocketTest';
 import { ApiTest } from './pages/ApiTest';
 import { WebRTCTest } from './pages/WebRTCTest';
@@ -112,6 +113,14 @@ function AppContent(): JSX.Element {
             element={
               <ProtectedRoute role="doctor">
                 <DoctorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/doctor/verification"
+            element={
+              <ProtectedRoute role="doctor">
+                <DoctorVerification />
               </ProtectedRoute>
             }
           />

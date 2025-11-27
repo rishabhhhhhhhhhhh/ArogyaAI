@@ -93,6 +93,9 @@ exports.analyzeSymptoms = async (req, res, next) => {
       data: analysis 
     });
   } catch (error) {
+    console.error('AI Analysis Error:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
     
     // Return the actual error instead of fallback
     res.status(500).json({ 
